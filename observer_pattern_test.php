@@ -44,14 +44,14 @@ class Notification {
 
 interface NotificationListener extends SplObserver {
 	public function registerFor(Notification $notification);
-	public function registeredFor(Notification $notification);
+	public function isRegisteredFor(Notification $notification);
 }
 
 class EmailNotificationListener implements NotificationListener {
 	private $_notification;
 	
 	public function update(SplSubject $subject) {
-		if ($this->registeredFor($subject->getPayload())) {
+		if ($this->isRegisteredFor($subject->getPayload())) {
 			echo "Email Subscriber: ".$subject->getPayload()->getIdentifier()."\n";			
 		}
 	}
@@ -60,7 +60,7 @@ class EmailNotificationListener implements NotificationListener {
 		$this->_notification = $notification;
 	}
 	
-	public function registeredFor(Notification $notification) {
+	public function isRegisteredFor(Notification $notification) {
 		return $this->_notification == $notification;
 	}
 }
@@ -69,7 +69,7 @@ class PushNotificationListener implements NotificationListener {
 	private $_notification;
 		
 	public function update(SplSubject $subject) {
-		if ($this->registeredFor($subject->getPayload())) {
+		if ($this->isRegisteredFor($subject->getPayload())) {
 			echo "Push Subscriber: ".$subject->getPayload()->getIdentifier()."\n";			
 		}
 	}
@@ -78,7 +78,7 @@ class PushNotificationListener implements NotificationListener {
 		$this->_notification = $notification;
 	}
 	
-	public function registeredFor(Notification $notification) {
+	public function isRegisteredFor(Notification $notification) {
 		return $this->_notification == $notification;
 	}	
 }
