@@ -24,7 +24,7 @@ class NotificationPlugin implements SplSubject {
 		return $this->_payload;
 	}
 	
-	public function setPayload($payload) {
+	public function setPayload(Notification $payload) {
 		$this->_payload = $payload;
 		$this->notify();
 	}
@@ -47,7 +47,19 @@ interface NotificationListener extends SplObserver {
 	public function isRegisteredFor(Notification $notification);
 }
 
-class EmailNotificationListener implements NotificationListener {
+abstract class NotificationListenerConcrete implements NotificationListener {
+	private $_notifications;
+	
+	public function registerFor(Notification $notification) {
+		$this->_notifications[] = $notification;
+	}
+	
+	public function isRegisteredFor(Notification $notification) {
+		return in_array($notification, $this->_notifications);
+	}	
+}
+
+class EmailNotificationListener extends NotificationListenerConcrete {
 	private $_notification;
 	
 	public function update(SplSubject $subject) {
@@ -55,17 +67,9 @@ class EmailNotificationListener implements NotificationListener {
 			echo "Email Subscriber: ".$subject->getPayload()->getIdentifier()."\n";			
 		}
 	}
-	
-	public function registerFor(Notification $notification) {
-		$this->_notification = $notification;
-	}
-	
-	public function isRegisteredFor(Notification $notification) {
-		return $this->_notification == $notification;
-	}
 }
 
-class PushNotificationListener implements NotificationListener {
+class PushNotificationListener extends NotificationListenerConcrete {
 	private $_notification;
 		
 	public function update(SplSubject $subject) {
@@ -73,14 +77,16 @@ class PushNotificationListener implements NotificationListener {
 			echo "Push Subscriber: ".$subject->getPayload()->getIdentifier()."\n";			
 		}
 	}
-	
-	public function registerFor(Notification $notification) {
-		$this->_notification = $notification;
+}
+
+class EmailAndPushNotificationListener extends NotificationListenerConcrete {
+	private $_notification;
+		
+	public function update(SplSubject $subject) {
+		if ($this->isRegisteredFor($subject->getPayload())) {
+			echo "EmailAndPush Subscriber: ".$subject->getPayload()->getIdentifier()."\n";			
+		}
 	}
-	
-	public function isRegisteredFor(Notification $notification) {
-		return $this->_notification == $notification;
-	}	
 }
 
 $email_notification = new Notification("Only Email subscribers should get this");
@@ -92,9 +98,14 @@ $email->registerFor($email_notification);
 $push = new PushNotificationListener();
 $push->registerFor($push_notification);
 
+$emailandpush = new EmailAndPushNotificationListener();
+$emailandpush->registerFor($email_notification);
+$emailandpush->registerFor($push_notification);
+
 $notification_plugin = new NotificationPlugin();
 $notification_plugin->attach($email);
 $notification_plugin->attach($push);
+$notification_plugin->attach($emailandpush);
 
 $notification_plugin->setPayload($email_notification);
 $notification_plugin->setPayload($push_notification);
